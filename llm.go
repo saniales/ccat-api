@@ -7,16 +7,16 @@ import (
 
 // llmClient is a sub-client for the LLM API.
 type llmClient struct {
-	Config *ClientConfig
+	config *ClientConfig
 }
 
 // newLLMClient creates a new LLM sub-client with the provided config.
 func newLLMClient(config ClientConfig) *llmClient {
 	client := &llmClient{
-		Config: &config,
+		config: &config,
 	}
 
-	WithBaseURL(fmt.Sprintf("%s/%s", client.Config.baseURL, "llm"))(client.Config)
+	WithBaseURL(fmt.Sprintf("%s/%s", client.config.baseURL, "llm"))(client.config)
 
 	return client
 }
@@ -53,7 +53,7 @@ type LLMSettingSchemaProperty struct {
 
 // GetAllLLMsSettings returns a list of all LLMs settings.
 func (client *llmClient) GetAllLLMsSettings() (*GetAllLLMsSettingsResponse, error) {
-	resp, err := doRequest[any, GetAllLLMsSettingsResponse](*client.Config, http.MethodGet, "/settings", nil, nil)
+	resp, err := doRequest[any, GetAllLLMsSettingsResponse](*client.config, http.MethodGet, "/settings", nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (client *llmClient) GetAllLLMsSettings() (*GetAllLLMsSettingsResponse, erro
 // GetLLMSetting returns a specific LLM setting.
 func (client *llmClient) GetLLMSetting(languageModelName string) (*LLMSetting, error) {
 	pathParams := fmt.Sprintf("/settings/%s", languageModelName)
-	resp, err := doRequest[any, LLMSetting](*client.Config, http.MethodGet, pathParams, nil, nil)
+	resp, err := doRequest[any, LLMSetting](*client.config, http.MethodGet, pathParams, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (client *llmClient) GetLLMSetting(languageModelName string) (*LLMSetting, e
 // UpsertLLMSetting updates a specific LLM setting value.
 func (client *llmClient) UpsertLLMSetting(languageModelName string, value map[string]any) (*LLMSetting, error) {
 	pathParams := fmt.Sprintf("/settings/%s", languageModelName)
-	resp, err := doRequest[map[string]any, LLMSetting](*client.Config, http.MethodPut, pathParams, nil, &value)
+	resp, err := doRequest[map[string]any, LLMSetting](*client.config, http.MethodPut, pathParams, nil, &value)
 	if err != nil {
 		return nil, err
 	}

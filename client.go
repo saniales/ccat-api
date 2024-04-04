@@ -11,7 +11,7 @@ import (
 )
 
 type Client struct {
-	Config *ClientConfig
+	config ClientConfig
 
 	Settings *settingsClient
 	LLM      *llmClient
@@ -32,7 +32,7 @@ type ClientConfig struct {
 // NewClient creates a new client with the provided Options.
 func NewClient(opts ...Option) *Client {
 	client := &Client{
-		Config: &ClientConfig{
+		config: ClientConfig{
 			httpClient: http.DefaultClient,
 			baseURL:    defaultURL,
 			userAgent:  defaultUserAgent,
@@ -46,18 +46,18 @@ func NewClient(opts ...Option) *Client {
 	}
 
 	for _, opt := range opts {
-		opt(client.Config)
+		opt(&client.config)
 	}
 
-	client.Settings = newSettingsClient(*client.Config)
-	client.LLM = newLLMClient(*client.Config)
+	client.Settings = newSettingsClient(client.config)
+	client.LLM = newLLMClient(client.config)
 
 	return client
 }
 
 // Status returns the status of the Ccat API.
-func (c *Client) Status() error {
-	_, err := doRequest[any, any](*c.Config, http.MethodGet, "", nil, nil)
+func (client *Client) Status() error {
+	_, err := doRequest[any, any](client.config, http.MethodGet, "", nil, nil)
 	if err != nil {
 		return err
 	}

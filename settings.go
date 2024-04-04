@@ -9,16 +9,16 @@ import (
 
 // settingsClient is a sub-client for the Settings API.
 type settingsClient struct {
-	Config *ClientConfig
+	config ClientConfig
 }
 
 // newSettingsClient creates a new Settings sub-client with the provided config.
 func newSettingsClient(config ClientConfig) *settingsClient {
 	client := &settingsClient{
-		Config: &config,
+		config: config,
 	}
 
-	WithBaseURL(fmt.Sprintf("%s/%s", client.Config.baseURL, "settings"))(client.Config)
+	WithBaseURL(fmt.Sprintf("%s/%s", client.config.baseURL, "settings"))(&client.config)
 
 	return client
 }
@@ -49,7 +49,7 @@ func (client *settingsClient) GetSettings(params GetSettingsParams) (*SettingsRe
 		return nil, err
 	}
 
-	resp, err := doRequest[any, SettingsResponse](*client.Config, http.MethodGet, "", values, nil)
+	resp, err := doRequest[any, SettingsResponse](client.config, http.MethodGet, "", values, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ type CreateSettingResponse Setting
 
 // CreateSetting creates a new setting in the database.
 func (client *settingsClient) CreateSetting(payload CreateSettingPayload) (*CreateSettingResponse, error) {
-	resp, err := doRequest[CreateSettingPayload, CreateSettingResponse](*client.Config, http.MethodPost, "", nil, &payload)
+	resp, err := doRequest[CreateSettingPayload, CreateSettingResponse](client.config, http.MethodPost, "", nil, &payload)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ type UpdateSettingResponse Setting
 // UpdateSetting updates a specific setting in the database if it exists.
 func (client *settingsClient) UpdateSetting(settingID string, payload UpdateSettingPayload) (*UpdateSettingResponse, error) {
 	pathParams := fmt.Sprintf("/%s", settingID)
-	resp, err := doRequest[UpdateSettingPayload, UpdateSettingResponse](*client.Config, http.MethodPut, pathParams, nil, &payload)
+	resp, err := doRequest[UpdateSettingPayload, UpdateSettingResponse](client.config, http.MethodPut, pathParams, nil, &payload)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (client *settingsClient) UpdateSetting(settingID string, payload UpdateSett
 // DeleteSEtting deletes a specific setting in the database.
 func (client *settingsClient) DeleteSetting(settingID string) error {
 	pathParams := fmt.Sprintf("/%s", settingID)
-	_, err := doRequest[any, any](*client.Config, http.MethodDelete, pathParams, nil, nil)
+	_, err := doRequest[any, any](client.config, http.MethodDelete, pathParams, nil, nil)
 	if err != nil {
 		return err
 	}
