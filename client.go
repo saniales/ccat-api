@@ -14,6 +14,7 @@ type Client struct {
 	Config *ClientConfig
 
 	Settings *settingsClient
+	LLM      *llmClient
 }
 
 type ClientConfig struct {
@@ -49,6 +50,7 @@ func NewClient(opts ...Option) *Client {
 	}
 
 	client.Settings = newSettingsClient(*client.Config)
+	client.LLM = newLLMClient(*client.Config)
 
 	return client
 }
