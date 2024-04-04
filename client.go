@@ -11,7 +11,9 @@ import (
 )
 
 type Client struct {
-	*ClientConfig
+	Config *ClientConfig
+
+	Settings *settingsClient
 }
 
 type ClientConfig struct {
@@ -24,14 +26,12 @@ type ClientConfig struct {
 
 	marshalFunc   func(v any) ([]byte, error)
 	unmarshalFunc func(data []byte, v any) error
-
-	Settings *settingsClient
 }
 
 // NewClient creates a new client with the provided Options.
 func NewClient(opts ...Option) *Client {
-	c := &Client{
-		ClientConfig: &ClientConfig{
+	client := &Client{
+		Config: &ClientConfig{
 			httpClient: http.DefaultClient,
 			baseURL:    defaultURL,
 			userAgent:  defaultUserAgent,
@@ -45,17 +45,17 @@ func NewClient(opts ...Option) *Client {
 	}
 
 	for _, opt := range opts {
-		opt(c.ClientConfig)
+		opt(client.Config)
 	}
 
-	c.Settings = newSettingsClient(*c.ClientConfig)
+	client.Settings = newSettingsClient(*client.Config)
 
-	return c
+	return client
 }
 
 // Status returns the status of the Ccat API.
 func (c *Client) Status() error {
-	_, err := doRequest[any, any](*c.ClientConfig, http.MethodGet, "", nil, nil)
+	_, err := doRequest[any, any](*c.Config, http.MethodGet, "", nil, nil)
 	if err != nil {
 		return err
 	}
@@ -63,11 +63,11 @@ func (c *Client) Status() error {
 	return nil
 }
 
-type APIErrorResponse struct {
+type APIErrorsResponse struct {
 	Errors []APIError `json:"error"`
 }
 
-func (err *APIErrorResponse) Error() string {
+func (err APIErrorsResponse) Error() string {
 	var builder strings.Builder
 
 	builder.WriteString("API error: \n")
@@ -86,7 +86,15 @@ type APIError struct {
 	URL      string            `json:"url"`
 }
 
-func (err *APIError) Error() string {
+type APIErrorText struct {
+	ErrorMessage string `json:"error"`
+}
+
+func (err APIErrorText) Error() string {
+	return err.ErrorMessage
+}
+
+func (err APIError) Error() string {
 	var builder strings.Builder
 
 	builder.WriteString("type: ")
@@ -161,13 +169,28 @@ func doRequest[PayloadType any, ResponseType any](config ClientConfig, method st
 	}
 
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		var apiErr APIErrorResponse
-		err = config.unmarshalFunc(respBodyBytes, &apiErr)
-		if err != nil {
-			return nil, ErrUnknownError(resp.StatusCode, string(respBodyBytes))
+		// Here we try to parse all possible error response formats
+		// if any of them match, we return the corresponding error
+		var apiErr error = new(APIErrorsResponse)
+		err = config.unmarshalFunc(respBodyBytes, apiErr)
+		if err == nil {
+			return nil, apiErr
 		}
 
-		return nil, &apiErr
+		apiErr = new(APIErrorText)
+		err = config.unmarshalFunc(respBodyBytes, apiErr)
+		if err == nil {
+			return nil, apiErr
+		}
+
+		apiErr = new(APIError)
+		err = config.unmarshalFunc(respBodyBytes, apiErr)
+		if err == nil {
+			return nil, apiErr
+		}
+
+		// if none matches, we return an unknown error
+		return nil, ErrUnknownError(resp.StatusCode, string(respBodyBytes))
 	}
 
 	response := new(ResponseType)
