@@ -3,24 +3,24 @@ package ccatapi
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/google/go-querystring/query"
 )
 
+// settingsClient is a sub-client for the Settings API.
 type settingsClient struct {
 	*ClientConfig
 }
 
-// newSettingsClient creates a new client with the provided Options.
+// newSettingsClient creates a new Settings sub-client with the provided config.
 func newSettingsClient(config ClientConfig) *settingsClient {
-	c := &settingsClient{
+	client := &settingsClient{
 		ClientConfig: &config,
 	}
 
-	WithBaseURL(fmt.Sprintf("%s/%s", c.baseURL, "settings"))(c.ClientConfig)
+	WithBaseURL(fmt.Sprintf("%s/%s", client.ClientConfig.baseURL, "settings"))(client.ClientConfig)
 
-	return c
+	return client
 }
 
 // GetSettingsParams contains the parameters for the GetSettings method.
@@ -35,6 +35,11 @@ type SettingsResponse struct {
 
 // SettingResponse contains the data about a single setting.
 type Setting struct {
+	Name      string         `json:"name"`
+	Value     map[string]any `json:"value"`
+	Category  string         `json:"category"`
+	SettingID string         `json:"setting_id"`
+	UpdatedAt int64          `json:"updated_at"`
 }
 
 // GetSettings returns a list of settings, optionally filtered by a search query.
@@ -54,41 +59,22 @@ func (c *settingsClient) GetSettings(params GetSettingsParams) (*SettingsRespons
 
 // CreateSettingPayload contains the payload for the CreateSetting method.
 type CreateSettingPayload struct {
-	Name     string `json:"name"`
-	Value    any    `json:"value"`
-	Category string `json:"category"`
+	Name     string         `json:"name"`
+	Value    map[string]any `json:"value"`
+	Category string         `json:"category"`
 }
 
 // CreateSettingResponse contains the response of the CreateSetting method.
-type CreateSettingResponse struct {
-	createSettingRawResponse
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
-// createSettingRawResponse contains the raw response of the CreateSetting method.
-//
-// The raw response has a unix timestamp to represent time.
-type createSettingRawResponse struct {
-	Name      string `json:"name"`
-	Value     any    `json:"value"`
-	Category  string `json:"category"`
-	SettingID string `json:"setting_id"`
-	UpdatedAt int64  `json:"updated_at"`
-}
+type CreateSettingResponse Setting
 
 // CreateSetting creates a new setting in the database.
 func (c *settingsClient) CreateSetting(payload CreateSettingPayload) (*CreateSettingResponse, error) {
-	rawResponse, err := doRequest[CreateSettingPayload, createSettingRawResponse](*c.ClientConfig, http.MethodPost, "", nil, &payload)
+	resp, err := doRequest[CreateSettingPayload, CreateSettingResponse](*c.ClientConfig, http.MethodPost, "", nil, &payload)
 	if err != nil {
 		return nil, err
 	}
 
-	response := &CreateSettingResponse{
-		createSettingRawResponse: *rawResponse,
-		UpdatedAt:                time.Unix(rawResponse.UpdatedAt, 0),
-	}
-
-	return response, nil
+	return resp, nil
 }
 
 // UpdateSettingPayload contains the payload for the UpdateSetting method.
@@ -98,37 +84,18 @@ type UpdateSettingPayload struct {
 	Category *string `json:"category,omitempty"`
 }
 
-// updateSettingRawResponse contains the raw response of the UpdateSetting method.
-//
-// The raw response has a unix timestamp to represent time.
-type updateSettingRawResponse struct {
-	Name      string `json:"name"`
-	Value     any    `json:"value"`
-	Category  string `json:"category"`
-	SettingID string `json:"setting_id"`
-	UpdatedAt int64  `json:"updated_at"`
-}
-
 // UpdateSettingResponse contains the response of the UpdateSetting method.
-type UpdateSettingResponse struct {
-	updateSettingRawResponse
-	UpdatedAt time.Time `json:"updated_at"`
-}
+type UpdateSettingResponse Setting
 
 // UpdateSetting updates a specific setting in the database if it exists.
 func (c *settingsClient) UpdateSetting(settingID string, payload UpdateSettingPayload) (*UpdateSettingResponse, error) {
 	pathParams := fmt.Sprintf("/%s", settingID)
-	rawResponse, err := doRequest[UpdateSettingPayload, updateSettingRawResponse](*c.ClientConfig, http.MethodPut, pathParams, nil, &payload)
+	resp, err := doRequest[UpdateSettingPayload, UpdateSettingResponse](*c.ClientConfig, http.MethodPut, pathParams, nil, &payload)
 	if err != nil {
 		return nil, err
 	}
 
-	response := &UpdateSettingResponse{
-		updateSettingRawResponse: *rawResponse,
-		UpdatedAt:                time.Unix(rawResponse.UpdatedAt, 0),
-	}
-
-	return response, nil
+	return resp, nil
 }
 
 // DeleteSEtting deletes a specific setting in the database.

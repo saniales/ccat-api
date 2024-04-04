@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type Client struct {
@@ -62,6 +63,55 @@ func (c *Client) Status() error {
 	return nil
 }
 
+type APIErrorResponse struct {
+	Errors []APIError `json:"error"`
+}
+
+func (err *APIErrorResponse) Error() string {
+	var builder strings.Builder
+
+	builder.WriteString("API error: \n")
+	for _, err := range err.Errors {
+		builder.WriteString(err.Error())
+	}
+
+	return builder.String()
+}
+
+type APIError struct {
+	Type     string            `json:"type"`
+	Location []string          `json:"loc"`
+	Message  string            `json:"msg"`
+	Input    map[string]string `json:"input"`
+	URL      string            `json:"url"`
+}
+
+func (err *APIError) Error() string {
+	var builder strings.Builder
+
+	builder.WriteString("type: ")
+	builder.WriteString(err.Type)
+	builder.WriteString("\nlocation: ")
+	for _, loc := range err.Location {
+		builder.WriteString(loc)
+		builder.WriteString(" ")
+	}
+
+	builder.WriteString("\nmessage: ")
+	builder.WriteString(err.Message)
+	for fieldName, fieldType := range err.Input {
+		builder.WriteString("\n")
+		builder.WriteString(fieldName)
+		builder.WriteString(": ")
+		builder.WriteString(fieldType)
+	}
+
+	builder.WriteString("\nurl: ")
+	builder.WriteString(err.URL)
+
+	return builder.String()
+}
+
 // doRequest sends a generic request to the Ccat API and returns the response.
 //
 // It uses a client config to keep consistency between clients.
@@ -105,13 +155,19 @@ func doRequest[PayloadType any, ResponseType any](config ClientConfig, method st
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
 	respBodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		var apiErr APIErrorResponse
+		err = config.unmarshalFunc(respBodyBytes, &apiErr)
+		if err != nil {
+			return nil, ErrUnknownError(resp.StatusCode, string(respBodyBytes))
+		}
+
+		return nil, &apiErr
 	}
 
 	response := new(ResponseType)
