@@ -34,21 +34,8 @@ type LLMSetting struct {
 
 // LLMSettingSchema contains the data about a single LLM setting schema.
 type LLMSettingSchema struct {
-	Description       string                              `json:"description"`
-	HumanReadableName string                              `json:"humanReadableName"`
-	Link              string                              `json:"link"`
-	Properties        map[string]LLMSettingSchemaProperty `json:"properties"`
-	Required          []string                            `json:"required"`
-	Title             string                              `json:"title"`
-	Type              string                              `json:"type"`
-	LanguageModelName string                              `json:"languageModelName"`
-}
-
-// LLMSettingSchemaProperty contains the data about a single LLM setting schema property.
-type LLMSettingSchemaProperty struct {
-	Title   string `json:"title"`
-	Type    string `json:"type"`
-	Default *any   `json:"default,omitempty"`
+	settingSchema
+	LanguageModelName string `json:"languageModelName"`
 }
 
 // GetAllLLMsSettings returns a list of all LLMs settings.
