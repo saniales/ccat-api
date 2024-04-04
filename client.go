@@ -15,6 +15,7 @@ type Client struct {
 
 	Settings *settingsClient
 	LLM      *llmClient
+	Embedder *embedderClient
 }
 
 type ClientConfig struct {
@@ -51,6 +52,7 @@ func NewClient(opts ...Option) *Client {
 
 	client.Settings = newSettingsClient(client.config)
 	client.LLM = newLLMClient(client.config)
+	client.Embedder = newEmbedderClient(client.config)
 
 	return client
 }
