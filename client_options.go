@@ -14,12 +14,6 @@ const (
 // Option is a functional option used to initialize a Client.
 type Option func(*ClientConfig)
 
-func WithConfig(newConfig ClientConfig) Option {
-	return func(config *ClientConfig) {
-		*config = newConfig
-	}
-}
-
 // WithHTTPClient returns an Option function that sets the HTTP client for the Client.
 func WithHTTPClient(httpClient *http.Client) Option {
 	return func(config *ClientConfig) {

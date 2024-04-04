@@ -47,11 +47,14 @@ func NewClient(opts ...Option) *Client {
 		opt(c.ClientConfig)
 	}
 
+	c.Settings = newSettingsClient(*c.ClientConfig)
+
 	return c
 }
 
+// Status returns the status of the Ccat API.
 func (c *Client) Status() error {
-	_, err := doRequest[any, any](c, http.MethodGet, "", nil, nil)
+	_, err := doRequest[any, any](*c.ClientConfig, http.MethodGet, "", nil, nil)
 	if err != nil {
 		return err
 	}
@@ -59,6 +62,9 @@ func (c *Client) Status() error {
 	return nil
 }
 
+// doRequest sends a generic request to the Ccat API and returns the response.
+//
+// It uses a client config to keep consistency between clients.
 func doRequest[PayloadType any, ResponseType any](config ClientConfig, method string, path string, queryParams url.Values, payload *PayloadType) (*ResponseType, error) {
 	fullURL, err := url.Parse(fmt.Sprintf("%s/%s", config.baseURL, path))
 	if err != nil {
@@ -109,7 +115,7 @@ func doRequest[PayloadType any, ResponseType any](config ClientConfig, method st
 	}
 
 	response := new(ResponseType)
-	err = c.unmarshalFunc(respBodyBytes, response)
+	err = config.unmarshalFunc(respBodyBytes, response)
 	if err != nil {
 		return nil, err
 	}
