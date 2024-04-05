@@ -11,12 +11,12 @@ const (
 	defaultUserID    string = "user"
 )
 
-// Option is a functional option used to initialize a Client.
-type Option func(*ClientConfig)
+// option is a functional option used to initialize a Client.
+type option func(*clientConfig)
 
-// WithHTTPClient returns an Option function that sets the HTTP client for the Client.
-func WithHTTPClient(httpClient *http.Client) Option {
-	return func(config *ClientConfig) {
+// WithHTTPClient returns an option function that sets the HTTP client for the Client.
+func WithHTTPClient(httpClient *http.Client) option {
+	return func(config *clientConfig) {
 		if httpClient == nil {
 			config.httpClient = http.DefaultClient
 		} else {
@@ -25,9 +25,9 @@ func WithHTTPClient(httpClient *http.Client) Option {
 	}
 }
 
-// WithBaseURL returns an Option function that sets the base URL of a Client.
-func WithBaseURL(baseURL string) Option {
-	return func(config *ClientConfig) {
+// WithBaseURL returns an option function that sets the base URL of a Client.
+func WithBaseURL(baseURL string) option {
+	return func(config *clientConfig) {
 		if (baseURL == "") || (baseURL == "/") {
 			config.baseURL = defaultURL
 		} else {
@@ -36,9 +36,9 @@ func WithBaseURL(baseURL string) Option {
 	}
 }
 
-// WithUserAgent returns an Option function that sets the user agent for the Client.
-func WithUserAgent(userAgent string) Option {
-	return func(config *ClientConfig) {
+// WithUserAgent returns an option function that sets the user agent for the Client.
+func WithUserAgent(userAgent string) option {
+	return func(config *clientConfig) {
 		if userAgent == "" {
 			config.userAgent = defaultUserAgent
 		}
@@ -47,25 +47,25 @@ func WithUserAgent(userAgent string) Option {
 	}
 }
 
-// WithUserID returns an Option function that sets the user ID for the Client.
-func WithUserID(userID string) Option {
-	return func(config *ClientConfig) {
+// WithUserID returns an option function that sets the user ID for the Client.
+func WithUserID(userID string) option {
+	return func(config *clientConfig) {
 		config.userID = userID
 	}
 }
 
-// WithAuthKey returns an Option function that sets the auth key for the Client.
-func WithAuthKey(authKey string) Option {
-	return func(config *ClientConfig) {
+// WithAuthKey returns an option function that sets the auth key for the Client.
+func WithAuthKey(authKey string) option {
+	return func(config *clientConfig) {
 		config.authKey = authKey
 	}
 }
 
-// WithMarshalFunc returns an Option function that sets the marshal function for the Client.
+// WithMarshalFunc returns an option function that sets the marshal function for the Client.
 //
 // if marshalFunc is nil, its default value is json.Marshal.
-func WithMarshalFunc(marshalFunc func(v any) ([]byte, error)) Option {
-	return func(config *ClientConfig) {
+func WithMarshalFunc(marshalFunc func(v any) ([]byte, error)) option {
+	return func(config *clientConfig) {
 		if marshalFunc == nil {
 			config.marshalFunc = json.Marshal
 		} else {
@@ -74,11 +74,11 @@ func WithMarshalFunc(marshalFunc func(v any) ([]byte, error)) Option {
 	}
 }
 
-// WithUnmarshalFunc returns an Option function that sets the unmarshal function for the Client.
+// WithUnmarshalFunc returns an option function that sets the unmarshal function for the Client.
 //
 // if unmarshalFunc is nil, its default value is json.Unmarshal.
-func WithUnmarshalFunc(unmarshalFunc func(data []byte, v any) error) Option {
-	return func(config *ClientConfig) {
+func WithUnmarshalFunc(unmarshalFunc func(data []byte, v any) error) option {
+	return func(config *clientConfig) {
 		if unmarshalFunc == nil {
 			config.unmarshalFunc = json.Unmarshal
 		} else {

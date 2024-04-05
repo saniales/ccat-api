@@ -10,17 +10,17 @@ import (
 	"strings"
 )
 
-// Client is a Ccat API client.
+// Client is a Cheshire Cat API client.
 type Client struct {
-	config ClientConfig
+	config clientConfig
 
-	Settings *settingsClient
-	LLM      *llmClient
-	Embedder *embedderClient
+	Settings  *settingsClient
+	LLMs      *llmsClient
+	Embedders *embeddersClient
 }
 
-// ClientConfig is the configuration for the Ccat API client.
-type ClientConfig struct {
+// clientConfig is the configuration for the Cheshire Cat API client.
+type clientConfig struct {
 	httpClient *http.Client
 	baseURL    string
 	userAgent  string
@@ -33,9 +33,9 @@ type ClientConfig struct {
 }
 
 // NewClient creates a new client with the provided Options.
-func NewClient(opts ...Option) *Client {
+func NewClient(opts ...option) *Client {
 	client := &Client{
-		config: ClientConfig{
+		config: clientConfig{
 			httpClient: http.DefaultClient,
 			baseURL:    defaultURL,
 			userAgent:  defaultUserAgent,
@@ -53,13 +53,13 @@ func NewClient(opts ...Option) *Client {
 	}
 
 	client.Settings = newSettingsClient(client.config)
-	client.LLM = newLLMClient(client.config)
-	client.Embedder = newEmbedderClient(client.config)
+	client.LLMs = newLLMsClient(client.config)
+	client.Embedders = newEmbeddersClient(client.config)
 
 	return client
 }
 
-// Status returns the status of the Ccat API.
+// Status returns the status of the Cheshire Cat API.
 func (client *Client) Status() error {
 	_, err := doRequest[any, any](client.config, http.MethodGet, "", nil, nil)
 	if err != nil {
@@ -126,10 +126,10 @@ func (err APIError) Error() string {
 	return builder.String()
 }
 
-// doRequest sends a generic request to the Ccat API and returns the response.
+// doRequest sends a generic request to the Cheshire Cat API and returns the response.
 //
 // It uses a client config to keep consistency between clients.
-func doRequest[PayloadType any, ResponseType any](config ClientConfig, method string, path string, queryParams url.Values, payload *PayloadType) (*ResponseType, error) {
+func doRequest[PayloadType any, ResponseType any](config clientConfig, method string, path string, queryParams url.Values, payload *PayloadType) (*ResponseType, error) {
 	fullURL, err := url.Parse(fmt.Sprintf("%s/%s", config.baseURL, path))
 	if err != nil {
 		return nil, err

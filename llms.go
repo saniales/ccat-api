@@ -5,14 +5,14 @@ import (
 	"net/http"
 )
 
-// llmClient is a sub-client for the LLM API.
-type llmClient struct {
-	config *ClientConfig
+// llmsClient is a sub-client for the LLM API.
+type llmsClient struct {
+	config *clientConfig
 }
 
-// newLLMClient creates a new LLM sub-client with the provided config.
-func newLLMClient(config ClientConfig) *llmClient {
-	client := &llmClient{
+// newLLMsClient creates a new LLM sub-client with the provided config.
+func newLLMsClient(config clientConfig) *llmsClient {
+	client := &llmsClient{
 		config: &config,
 	}
 
@@ -39,7 +39,7 @@ type LLMSettingSchema struct {
 }
 
 // GetAllLLMsSettings returns a list of all LLMs settings.
-func (client *llmClient) GetAllLLMsSettings() (*GetAllLLMsSettingsResponse, error) {
+func (client *llmsClient) GetAllLLMsSettings() (*GetAllLLMsSettingsResponse, error) {
 	resp, err := doRequest[any, GetAllLLMsSettingsResponse](*client.config, http.MethodGet, "/settings", nil, nil)
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (client *llmClient) GetAllLLMsSettings() (*GetAllLLMsSettingsResponse, erro
 }
 
 // GetLLMSetting returns a specific LLM setting.
-func (client *llmClient) GetLLMSetting(languageModelName string) (*LLMSetting, error) {
+func (client *llmsClient) GetLLMSetting(languageModelName string) (*LLMSetting, error) {
 	pathParams := fmt.Sprintf("/settings/%s", languageModelName)
 	resp, err := doRequest[any, LLMSetting](*client.config, http.MethodGet, pathParams, nil, nil)
 	if err != nil {
@@ -60,7 +60,7 @@ func (client *llmClient) GetLLMSetting(languageModelName string) (*LLMSetting, e
 }
 
 // UpsertLLMSetting updates a specific LLM setting value.
-func (client *llmClient) UpsertLLMSetting(languageModelName string, value map[string]any) (*LLMSetting, error) {
+func (client *llmsClient) UpsertLLMSetting(languageModelName string, value map[string]any) (*LLMSetting, error) {
 	pathParams := fmt.Sprintf("/settings/%s", languageModelName)
 	resp, err := doRequest[map[string]any, LLMSetting](*client.config, http.MethodPut, pathParams, nil, &value)
 	if err != nil {

@@ -9,11 +9,11 @@ import (
 
 // settingsClient is a sub-client for the Settings API.
 type settingsClient struct {
-	config ClientConfig
+	config clientConfig
 }
 
 // newSettingsClient creates a new Settings sub-client with the provided config.
-func newSettingsClient(config ClientConfig) *settingsClient {
+func newSettingsClient(config clientConfig) *settingsClient {
 	client := &settingsClient{
 		config: config,
 	}

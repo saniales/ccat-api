@@ -5,14 +5,14 @@ import (
 	"net/http"
 )
 
-// embedderClient is a sub-client for the Embedder API.
-type embedderClient struct {
-	config ClientConfig
+// embeddersClient is a sub-client for the Embedder API.
+type embeddersClient struct {
+	config clientConfig
 }
 
-// newEmbedderClient creates a new Embedder sub-client with the provided config.
-func newEmbedderClient(config ClientConfig) *embedderClient {
-	client := &embedderClient{
+// newEmbeddersClient creates a new Embedder sub-client with the provided config.
+func newEmbeddersClient(config clientConfig) *embeddersClient {
+	client := &embeddersClient{
 		config: config,
 	}
 
@@ -40,7 +40,7 @@ type EmbedderSettingSchema struct {
 }
 
 // GetAllEmbeddersSettings returns a list of all embedders settings.
-func (client *embedderClient) GetAllEmbeddersSettings() (*GetAllEmbeddersSettingsResponse, error) {
+func (client *embeddersClient) GetAllEmbeddersSettings() (*GetAllEmbeddersSettingsResponse, error) {
 	resp, err := doRequest[any, GetAllEmbeddersSettingsResponse](client.config, http.MethodGet, "/settings", nil, nil)
 	if err != nil {
 		return nil, err
