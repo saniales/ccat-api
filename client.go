@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// Client is a Ccat API client.
 type Client struct {
 	config ClientConfig
 
@@ -18,6 +19,7 @@ type Client struct {
 	Embedder *embedderClient
 }
 
+// ClientConfig is the configuration for the Ccat API client.
 type ClientConfig struct {
 	httpClient *http.Client
 	baseURL    string
@@ -194,7 +196,7 @@ func doRequest[PayloadType any, ResponseType any](config ClientConfig, method st
 		}
 
 		// if none matches, we return an unknown error
-		return nil, ErrUnknownError(resp.StatusCode, string(respBodyBytes))
+		return nil, errUnknownError(resp.StatusCode, string(respBodyBytes))
 	}
 
 	response := new(ResponseType)
