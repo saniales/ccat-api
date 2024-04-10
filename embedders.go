@@ -48,3 +48,25 @@ func (client *embeddersClient) GetAllEmbeddersSettings() (*GetAllEmbeddersSettin
 
 	return resp, nil
 }
+
+// GetEmbedderSetting returns a specific embedder setting.
+func (client *embeddersClient) GetEmbedderSetting(languageEmbedderName string) (*EmbedderSetting, error) {
+	pathParams := fmt.Sprintf("/settings/%s", languageEmbedderName)
+	resp, err := doRequest[any, EmbedderSetting](client.config, http.MethodGet, pathParams, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+// UpsertEmbedderSetting updates a specific embedder setting value.
+func (client *embeddersClient) UpsertEmbedderSetting(languageEmbedderName string, value map[string]any) (*EmbedderSetting, error) {
+	pathParams := fmt.Sprintf("/settings/%s", languageEmbedderName)
+	resp, err := doRequest[map[string]any, EmbedderSetting](client.config, http.MethodPut, pathParams, nil, &value)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
