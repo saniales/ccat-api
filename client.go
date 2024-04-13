@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strings"
@@ -17,6 +18,7 @@ type Client struct {
 	Settings  *settingsClient
 	LLMs      *llmsClient
 	Embedders *embeddersClient
+	Plugins   *pluginsClient
 }
 
 // clientConfig is the configuration for the Cheshire Cat API client.
@@ -55,13 +57,14 @@ func NewClient(opts ...option) *Client {
 	client.Settings = newSettingsClient(client.config)
 	client.LLMs = newLLMsClient(client.config)
 	client.Embedders = newEmbeddersClient(client.config)
+	client.Plugins = newPluginsClient(client.config)
 
 	return client
 }
 
 // Status returns the status of the Cheshire Cat API.
 func (client *Client) Status() error {
-	_, err := doRequest[any, any](client.config, http.MethodGet, "", nil, nil)
+	_, err := doAPIRequest[any, any](client.config, http.MethodGet, "", nil, nil)
 	if err != nil {
 		return err
 	}
@@ -126,19 +129,16 @@ func (err APIError) Error() string {
 	return builder.String()
 }
 
-// doRequest sends a generic request to the Cheshire Cat API and returns the response.
+// doAPIRequest sends a generic request to the Cheshire Cat API and returns the response.
 //
 // It uses a client config to keep consistency between clients.
-func doRequest[PayloadType any, ResponseType any](config clientConfig, method string, path string, queryParams url.Values, payload *PayloadType) (*ResponseType, error) {
-	fullURL, err := url.Parse(fmt.Sprintf("%s/%s", config.baseURL, path))
-	if err != nil {
-		return nil, err
-	}
-
-	if queryParams != nil {
-		fullURL.RawQuery = queryParams.Encode()
-	}
-
+func doAPIRequest[PayloadType any, ResponseType any](
+	config clientConfig,
+	method string,
+	path string,
+	queryParams url.Values,
+	payload *PayloadType,
+) (*ResponseType, error) {
 	var requestBodyBuffer *bytes.Buffer
 	if payload != nil {
 		encodedPayload, err := config.marshalFunc(payload)
@@ -149,14 +149,73 @@ func doRequest[PayloadType any, ResponseType any](config clientConfig, method st
 		requestBodyBuffer = bytes.NewBuffer(encodedPayload)
 	}
 
-	req, err := http.NewRequest(method, fullURL.String(), requestBodyBuffer)
+	return doHTTPRequest[ResponseType](
+		config,
+		"application/json",
+		method,
+		path,
+		queryParams,
+		requestBodyBuffer,
+	)
+}
+
+// doMultipartRequest performs a multipart request.
+func doMultipartRequest[ResponseType any](config clientConfig, method string, path string, queryParams url.Values, payloadFileName string, payloadReader io.Reader) (*ResponseType, error) {
+	if payloadReader == nil {
+		return nil, ErrUploadMissingFile
+	}
+
+	var requestBodyBuffer bytes.Buffer
+	multipartWriter := multipart.NewWriter(&requestBodyBuffer)
+
+	w, err := multipartWriter.CreateFormFile("file", payloadFileName)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = io.Copy(w, payloadReader)
+	if err != nil {
+		return nil, err
+	}
+
+	multipartWriter.Close()
+
+	return doHTTPRequest[ResponseType](
+		config,
+		multipartWriter.FormDataContentType(),
+		method,
+		path,
+		queryParams,
+		&requestBodyBuffer,
+	)
+}
+
+// doHTTPRequest performs a generic raw HTTP request and returns the parsed response.
+func doHTTPRequest[ResponseType any](
+	config clientConfig,
+	contentType string,
+	method string,
+	path string,
+	queryParams url.Values,
+	body io.Reader,
+) (*ResponseType, error) {
+	fullURL, err := url.Parse(fmt.Sprintf("%s/%s", config.baseURL, path))
+	if err != nil {
+		return nil, err
+	}
+
+	if queryParams != nil {
+		fullURL.RawQuery = queryParams.Encode()
+	}
+
+	req, err := http.NewRequest(method, fullURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
 
 	// Set headers
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("User-Agent", config.userAgent)
 
 	if len(config.authKey) > 0 {

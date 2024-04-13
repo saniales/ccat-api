@@ -40,7 +40,7 @@ type LLMSettingSchema struct {
 
 // GetAllLLMsSettings returns a list of all LLMs settings.
 func (client *llmsClient) GetAllLLMsSettings() (*GetAllLLMsSettingsResponse, error) {
-	resp, err := doRequest[any, GetAllLLMsSettingsResponse](*client.config, http.MethodGet, "/settings", nil, nil)
+	resp, err := doAPIRequest[any, GetAllLLMsSettingsResponse](*client.config, http.MethodGet, "/settings", nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (client *llmsClient) GetAllLLMsSettings() (*GetAllLLMsSettingsResponse, err
 // GetLLMSetting returns a specific LLM setting.
 func (client *llmsClient) GetLLMSetting(languageModelName string) (*LLMSetting, error) {
 	pathParams := fmt.Sprintf("/settings/%s", languageModelName)
-	resp, err := doRequest[any, LLMSetting](*client.config, http.MethodGet, pathParams, nil, nil)
+	resp, err := doAPIRequest[any, LLMSetting](*client.config, http.MethodGet, pathParams, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (client *llmsClient) GetLLMSetting(languageModelName string) (*LLMSetting, 
 // UpsertLLMSetting updates a specific LLM setting value.
 func (client *llmsClient) UpsertLLMSetting(languageModelName string, value map[string]any) (*LLMSetting, error) {
 	pathParams := fmt.Sprintf("/settings/%s", languageModelName)
-	resp, err := doRequest[map[string]any, LLMSetting](*client.config, http.MethodPut, pathParams, nil, &value)
+	resp, err := doAPIRequest[map[string]any, LLMSetting](*client.config, http.MethodPut, pathParams, nil, &value)
 	if err != nil {
 		return nil, err
 	}
