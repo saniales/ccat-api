@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strings"
@@ -15,11 +14,12 @@ import (
 type Client struct {
 	config clientConfig
 
-	Settings  *settingsClient
-	LLMs      *llmsClient
-	Embedders *embeddersClient
-	Plugins   *pluginsClient
-	Memory    *memoryClient
+	Settings   *settingsClient
+	LLMs       *llmsClient
+	Embedders  *embeddersClient
+	Plugins    *pluginsClient
+	Memory     *memoryClient
+	RabbitHole *rabbitHoleClient
 }
 
 // clientConfig is the configuration for the Cheshire Cat API client.
@@ -60,6 +60,7 @@ func NewClient(opts ...option) *Client {
 	client.Embedders = newEmbeddersClient(client.config)
 	client.Plugins = newPluginsClient(client.config)
 	client.Memory = newMemoryClient(client.config)
+	client.RabbitHole = newRabbitHoleClient(client.config)
 
 	return client
 }
