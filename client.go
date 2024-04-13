@@ -19,6 +19,7 @@ type Client struct {
 	LLMs      *llmsClient
 	Embedders *embeddersClient
 	Plugins   *pluginsClient
+	Memory    *memoryClient
 }
 
 // clientConfig is the configuration for the Cheshire Cat API client.
@@ -58,6 +59,7 @@ func NewClient(opts ...option) *Client {
 	client.LLMs = newLLMsClient(client.config)
 	client.Embedders = newEmbeddersClient(client.config)
 	client.Plugins = newPluginsClient(client.config)
+	client.Memory = newMemoryClient(client.config)
 
 	return client
 }
