@@ -1,9 +1,12 @@
 package ccatapi
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
 )
 
 // pluginsClient is a sub-client for the Plugins API.
@@ -22,14 +25,15 @@ func newPluginsClient(config clientConfig) *pluginsClient {
 	return client
 }
 
-type pluginResponseFilters struct {
-	Query *string `json:"query,omitempty"`
-}
-
+// PluginsResponse contains the response data about a plugin.
 type PluginsResponse struct {
 	Filters   pluginResponseFilters `json:"filters"`
 	Installed []InstalledPlugin     `json:"installed"`
 	Registry  []RegistryPlugin      `json:"registry"`
+}
+
+type pluginResponseFilters struct {
+	Query *string `json:"query,omitempty"`
 }
 
 type plugin struct {
@@ -43,6 +47,7 @@ type plugin struct {
 	Thumb       string `json:"thumb"`
 }
 
+// InstalledPlugin contains the data about an installed plugin.
 type InstalledPlugin struct {
 	plugin
 	ID      string                    `json:"id"`
@@ -52,15 +57,18 @@ type InstalledPlugin struct {
 	Tools   []InstalledPluginToolData `json:"tools"`
 }
 
+// InstalledPluginHookData contains the data about an installed plugin hook.
 type InstalledPluginHookData struct {
 	Name     string `json:"name"`
 	Priority int    `json:"priority"`
 }
 
+// InstalledPluginToolData contains the data about an installed plugin tool.
 type InstalledPluginToolData struct {
 	Name string `json:"name"`
 }
 
+// RegistryPlugin contains the data about a registry plugin.
 type RegistryPlugin struct {
 	plugin
 	URL string `json:"url"`
@@ -90,18 +98,33 @@ type UploadPluginResponse struct {
 }
 
 // UploadPlugin uploads a plugin.
-func (client *pluginsClient) UploadPlugin(zipFileReader io.Reader) (*UploadPluginResponse, error) {
+func (client *pluginsClient) UploadPlugin(zipFileReader *os.File) (*UploadPluginResponse, error) {
 	if zipFileReader == nil {
 		return nil, ErrUploadMissingFile
 	}
 
-	resp, err := doMultipartRequest[UploadPluginResponse](
+	var requestBodyBuffer bytes.Buffer
+	multipartWriter := multipart.NewWriter(&requestBodyBuffer)
+
+	formFieldWriter, err := multipartWriter.CreateFormFile("file", zipFileReader.Name())
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = io.Copy(formFieldWriter, zipFileReader)
+	if err != nil {
+		return nil, err
+	}
+
+	multipartWriter.Close()
+
+	resp, err := doHTTPRequest[UploadPluginResponse](
 		client.config,
+		multipartWriter.FormDataContentType(),
 		http.MethodPost,
 		"upload",
 		nil,
-		"file",
-		zipFileReader,
+		&requestBodyBuffer,
 	)
 	if err != nil {
 		return nil, err

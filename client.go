@@ -161,38 +161,9 @@ func doAPIRequest[PayloadType any, ResponseType any](
 	)
 }
 
-// doMultipartRequest performs a multipart request.
-func doMultipartRequest[ResponseType any](config clientConfig, method string, path string, queryParams url.Values, payloadFileName string, payloadReader io.Reader) (*ResponseType, error) {
-	if payloadReader == nil {
-		return nil, ErrUploadMissingFile
-	}
-
-	var requestBodyBuffer bytes.Buffer
-	multipartWriter := multipart.NewWriter(&requestBodyBuffer)
-
-	w, err := multipartWriter.CreateFormFile("file", payloadFileName)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = io.Copy(w, payloadReader)
-	if err != nil {
-		return nil, err
-	}
-
-	multipartWriter.Close()
-
-	return doHTTPRequest[ResponseType](
-		config,
-		multipartWriter.FormDataContentType(),
-		method,
-		path,
-		queryParams,
-		&requestBodyBuffer,
-	)
-}
-
 // doHTTPRequest performs a generic raw HTTP request and returns the parsed response.
+//
+// Used alone mainly for multipart requests.
 func doHTTPRequest[ResponseType any](
 	config clientConfig,
 	contentType string,
