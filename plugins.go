@@ -68,7 +68,13 @@ type RegistryPlugin struct {
 
 // GetPlugins returns all available plugins, optionally filtered by a search query.
 func (client *pluginsClient) GetPlugins() (*PluginsResponse, error) {
-	resp, err := doAPIRequest[any, PluginsResponse](client.config, http.MethodGet, "", nil, nil)
+	resp, err := doAPIRequest[any, PluginsResponse](
+		client.config,
+		http.MethodGet,
+		"",
+		nil,
+		nil,
+	)
 	if err != nil {
 		return nil, err
 	}
