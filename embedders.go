@@ -41,7 +41,13 @@ type EmbedderSettingSchema struct {
 
 // GetAllEmbeddersSettings returns a list of all embedders settings.
 func (client *embeddersClient) GetAllEmbeddersSettings() (*GetAllEmbeddersSettingsResponse, error) {
-	resp, err := doAPIRequest[any, GetAllEmbeddersSettingsResponse](client.config, http.MethodGet, "/settings", nil, nil)
+	resp, err := doAPIRequest[any, GetAllEmbeddersSettingsResponse](
+		client.config,
+		http.MethodGet,
+		"/settings",
+		nil,
+		nil,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +58,13 @@ func (client *embeddersClient) GetAllEmbeddersSettings() (*GetAllEmbeddersSettin
 // GetEmbedderSetting returns a specific embedder setting.
 func (client *embeddersClient) GetEmbedderSetting(languageEmbedderName string) (*EmbedderSetting, error) {
 	pathParams := fmt.Sprintf("/settings/%s", languageEmbedderName)
-	resp, err := doAPIRequest[any, EmbedderSetting](client.config, http.MethodGet, pathParams, nil, nil)
+	resp, err := doAPIRequest[any, EmbedderSetting](
+		client.config,
+		http.MethodGet,
+		pathParams,
+		nil,
+		nil,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +75,13 @@ func (client *embeddersClient) GetEmbedderSetting(languageEmbedderName string) (
 // UpsertEmbedderSetting updates a specific embedder setting value.
 func (client *embeddersClient) UpsertEmbedderSetting(languageEmbedderName string, value map[string]any) (*EmbedderSetting, error) {
 	pathParams := fmt.Sprintf("/settings/%s", languageEmbedderName)
-	resp, err := doAPIRequest[map[string]any, EmbedderSetting](client.config, http.MethodPut, pathParams, nil, &value)
+	resp, err := doAPIRequest[map[string]any, EmbedderSetting](
+		client.config,
+		http.MethodPut,
+		pathParams,
+		nil,
+		&value,
+	)
 	if err != nil {
 		return nil, err
 	}
